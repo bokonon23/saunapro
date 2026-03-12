@@ -1,10 +1,12 @@
 import SwiftUI
+import SwiftData
 import Charts
 
 struct SessionDetailView: View {
-    let session: SessionRecord
+    @Bindable var session: SessionRecord
     let dayData: DayData?
     @State private var notes: String
+    @Environment(\.modelContext) private var modelContext
 
     init(session: SessionRecord, dayData: DayData?) {
         self.session = session
@@ -259,6 +261,7 @@ struct SessionDetailView: View {
                 .textFieldStyle(.roundedBorder)
                 .onChange(of: notes) {
                     session.notes = notes.isEmpty ? nil : notes
+                    try? modelContext.save()
                 }
         }
         .padding()

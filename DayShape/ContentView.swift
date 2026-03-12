@@ -10,8 +10,8 @@ import SwiftUI
 struct ContentView: View {
     var body: some View {
         TabView {
-            Tab("Today", systemImage: "flame") {
-                TodayView()
+            Tab("Day View", systemImage: "flame") {
+                DayView()
             }
             Tab("History", systemImage: "calendar") {
                 HistoryView()

@@ -24,6 +24,7 @@ final class HealthKitManager: Sendable {
             types.insert(HKQuantityType(.appleSleepingWristTemperature))
         }
         types.insert(HKQuantityType(.waterTemperature))
+        types.insert(HKWorkoutType.workoutType())
         return types
     }
 
@@ -80,6 +81,45 @@ final class HealthKitManager: Sendable {
             temperatureSamples: allTemp,
             restingHeartRate: try await rhr
         )
+    }
+
+    // MARK: - Workouts
+
+    struct WorkoutTimeRange: Sendable {
+        let start: Date
+        let end: Date
+        let activityType: HKWorkoutActivityType
+    }
+
+    /// Returns time ranges of recorded workouts for the last N days.
+    /// Used to filter out exercise (swimming, running, etc.) from sauna detection.
+    func workoutTimeRanges(days: Int, from date: Date = Date()) async -> [WorkoutTimeRange] {
+        guard isAvailable else { return [] }
+
+        let calendar = Calendar.current
+        let endDate = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: date)) ?? date
+        guard let startDate = calendar.date(byAdding: .day, value: -days, to: endDate) else { return [] }
+
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate)
+        let sortDescriptor = SortDescriptor(\HKWorkout.startDate, order: .forward)
+
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.workout(predicate)],
+            sortDescriptors: [sortDescriptor]
+        )
+
+        do {
+            let workouts = try await descriptor.result(for: store)
+            return workouts.map { workout in
+                WorkoutTimeRange(
+                    start: workout.startDate,
+                    end: workout.endDate,
+                    activityType: workout.workoutActivityType
+                )
+            }
+        } catch {
+            return []
+        }
     }
 
     // MARK: - Private
