@@ -110,6 +110,7 @@ struct SampleDataProvider {
             heartRateSamples: hrSamples,
             hrvSamples: hrvSamples,
             temperatureSamples: tempSamples,
+            stepSamples: [],  // No steps during sauna in sample data
             restingHeartRate: baselineHR
         )
     }

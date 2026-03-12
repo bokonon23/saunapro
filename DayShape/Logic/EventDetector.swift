@@ -3,13 +3,27 @@ import Foundation
 struct EventDetector {
 
     struct Config {
-        var elevationTarget: Double = 1.6       // HR must exceed baseline × this
-        var peakThreshold: Double = 2.0          // Peak must reach baseline × this
-        var minDurationMinutes: Double = 3       // Minimum session duration
+        // HR thresholds
+        var elevationTarget: Double = 1.5       // HR must exceed baseline × this to start a window
+        var peakThreshold: Double = 1.8          // Peak must reach baseline × this
         var maxGapMinutes: Double = 10           // Max gap between samples in same window
-        var recoveryThreshold: Double = 10       // Recovery = HR drops to baseline + this
+
+        // Duration
+        var saunaMinMinutes: Double = 10         // Saunas last at least 10 min
         var coldPlungeMaxMinutes: Double = 10    // Cold plunges are short
-        var saunaMinMinutes: Double = 8          // Saunas last at least this long
+
+        // Recovery
+        var recoveryThreshold: Double = 10       // Recovery = HR drops to baseline + this bpm
+
+        // Step count filter
+        var maxStepsPerMinute: Double = 5        // During sauna, you're stationary
+
+        // Confidence scoring
+        var minConfidence: Double = 0.5          // Reject sessions below this confidence
+
+        // Habitual time windows (hour of day, 0-23)
+        var habitualWindows: [(start: Int, end: Int)] = []  // e.g., [(11, 13)] for 11am-1pm
+        var habitualBoost: Double = 0.15         // Confidence boost for matching habitual window
     }
 
     let config: Config
@@ -29,11 +43,35 @@ struct EventDetector {
         // Find elevated HR windows
         let windows = findElevatedWindows(samples: hrSamples, baselineHR: baselineHR)
 
-        // Convert windows to session records
+        // Score and filter each window
         var sessions: [SessionRecord] = []
         for window in windows {
             let duration = window.endTime.timeIntervalSince(window.startTime) / 60.0
-            let sessionType = classifySession(window: window, baselineHR: baselineHR, waterTemps: dayData.temperatureSamples)
+
+            // Calculate confidence score
+            let confidence = scoreSession(
+                window: window,
+                baselineHR: baselineHR,
+                duration: duration,
+                stepSamples: dayData.stepSamples,
+                temperatureSamples: dayData.temperatureSamples
+            )
+
+            // Reject low-confidence detections
+            guard confidence >= config.minConfidence else { continue }
+
+            let sessionType = classifySession(
+                window: window,
+                baselineHR: baselineHR,
+                duration: duration,
+                waterTemps: dayData.temperatureSamples
+            )
+
+            // Enforce minimum duration for sauna
+            if sessionType == .sauna && duration < config.saunaMinMinutes {
+                continue
+            }
+
             let recoveryMinutes = computeRecoveryTime(samples: hrSamples, afterTime: window.endTime, baselineHR: baselineHR)
             let (preHRV, postHRV) = findHRVContext(hrvSamples: dayData.hrvSamples, sessionStart: window.startTime, sessionEnd: window.endTime)
 
@@ -55,9 +93,86 @@ struct EventDetector {
         return sessions
     }
 
+    // MARK: - Confidence Scoring
+
+    /// Score a candidate session from 0.0 to 1.0 based on multiple signals.
+    private func scoreSession(
+        window: DetectedWindow,
+        baselineHR: Double,
+        duration: Double,
+        stepSamples: [HealthSample],
+        temperatureSamples: [HealthSample]
+    ) -> Double {
+        var score: Double = 0.0
+        var maxScore: Double = 0.0
+
+        // 1. Duration score (0-0.25) — longer sustained elevation = more likely sauna
+        maxScore += 0.25
+        if duration >= 15 {
+            score += 0.25
+        } else if duration >= 10 {
+            score += 0.20
+        } else if duration >= 5 {
+            score += 0.10
+        }
+
+        // 2. HR elevation pattern (0-0.25) — sustained high HR, not spiky like exercise
+        maxScore += 0.25
+        let hrValues = window.samples.map(\.value)
+        let avgElevation = hrValues.reduce(0, +) / Double(hrValues.count)
+        let elevationRatio = avgElevation / baselineHR
+        if elevationRatio >= 1.6 {
+            score += 0.25
+        } else if elevationRatio >= 1.4 {
+            score += 0.15
+        } else if elevationRatio >= 1.3 {
+            score += 0.10
+        }
+
+        // 3. Step count score (0-0.25) — very low steps = stationary = sauna
+        maxScore += 0.25
+        let stepsInWindow = stepSamples.filter {
+            $0.timestamp >= window.startTime && $0.timestamp <= window.endTime
+        }
+        let totalSteps = stepsInWindow.map(\.value).reduce(0, +)
+        let stepsPerMinute = duration > 0 ? totalSteps / duration : 0
+
+        if stepsPerMinute <= 1 {
+            score += 0.25  // Essentially zero movement — very likely sauna
+        } else if stepsPerMinute <= config.maxStepsPerMinute {
+            score += 0.15  // Minimal movement
+        } else if stepsPerMinute <= 15 {
+            score += 0.05  // Some movement — could be light walking
+        }
+        // stepsPerMinute > 15 → likely exercise, no score added
+
+        // 4. Temperature signal (0-0.10) — wrist temp rise during session
+        maxScore += 0.10
+        let wristTemps = temperatureSamples.filter { $0.type == .wristTemperature }
+        let tempsNearSession = wristTemps.filter {
+            abs($0.timestamp.timeIntervalSince(window.startTime)) < 60 * 60
+        }
+        if !tempsNearSession.isEmpty {
+            score += 0.10  // Having wrist temp data near session time is a positive signal
+        }
+
+        // 5. Habitual time window bonus (0-0.15)
+        maxScore += 0.15
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: window.startTime)
+        let isHabitualTime = config.habitualWindows.contains { window in
+            hour >= window.start && hour < window.end
+        }
+        if isHabitualTime {
+            score += config.habitualBoost
+        }
+
+        return score / maxScore
+    }
+
     // MARK: - Baseline
 
-    /// Compute baseline HR from night readings (00:00–06:00), matching web app algorithm.
+    /// Compute baseline HR from night readings (00:00–06:00).
     private func computeBaseline(samples: [HealthSample], dayStart: Date) -> Double {
         let calendar = Calendar.current
         let nightStart = calendar.startOfDay(for: dayStart)
@@ -128,13 +243,10 @@ struct EventDetector {
               peakSample.value >= peakRequired else { return nil }
 
         let duration = samples.last!.timestamp.timeIntervalSince(samples.first!.timestamp) / 60.0
-        guard duration >= config.minDurationMinutes else { return nil }
-
-        // Expand start backward to capture ramp-up (up to 10 min before first elevated sample)
-        let expandedStart = samples.first!.timestamp.addingTimeInterval(-10 * 60)
+        guard duration >= 3 else { return nil }  // Absolute minimum — further filtering happens later
 
         return DetectedWindow(
-            startTime: max(expandedStart, samples.first!.timestamp),
+            startTime: samples.first!.timestamp,
             endTime: samples.last!.timestamp,
             peakTime: peakSample.timestamp,
             peakHR: peakSample.value,
@@ -144,9 +256,7 @@ struct EventDetector {
 
     // MARK: - Classification
 
-    private func classifySession(window: DetectedWindow, baselineHR: Double, waterTemps: [HealthSample]) -> SessionType {
-        let duration = window.endTime.timeIntervalSince(window.startTime) / 60.0
-
+    private func classifySession(window: DetectedWindow, baselineHR: Double, duration: Double, waterTemps: [HealthSample]) -> SessionType {
         // Check for nearby water temperature data (cold plunge indicator)
         let hasWaterTemp = findNearestWaterTemp(temps: waterTemps, near: window.startTime) != nil
 
@@ -154,12 +264,10 @@ struct EventDetector {
             return .coldPlunge
         }
 
-        // Short duration with HR spike pattern = cold plunge
+        // Short duration with early HR spike pattern = cold plunge
         if duration <= config.coldPlungeMaxMinutes {
-            let hrValues = window.samples.map(\.value)
             let earlyPeak = window.samples.prefix(max(1, window.samples.count / 3)).map(\.value).max() ?? 0
             let latePeak = window.samples.suffix(max(1, window.samples.count / 3)).map(\.value).max() ?? 0
-            // Cold plunge: spike early, drop late
             if earlyPeak > latePeak * 1.2 {
                 return .coldPlunge
             }
@@ -191,8 +299,8 @@ struct EventDetector {
     // MARK: - HRV Context
 
     private func findHRVContext(hrvSamples: [HealthSample], sessionStart: Date, sessionEnd: Date) -> (pre: Double?, post: Double?) {
-        let preWindow: TimeInterval = 60 * 60 // 1 hour before
-        let postWindow: TimeInterval = 60 * 60 // 1 hour after
+        let preWindow: TimeInterval = 60 * 60
+        let postWindow: TimeInterval = 60 * 60
 
         let preSamples = hrvSamples.filter {
             $0.timestamp >= sessionStart.addingTimeInterval(-preWindow) && $0.timestamp < sessionStart
@@ -201,7 +309,6 @@ struct EventDetector {
             $0.timestamp > sessionEnd && $0.timestamp <= sessionEnd.addingTimeInterval(postWindow)
         }
 
-        // Take the closest sample to session boundaries
         let pre = preSamples.max(by: { $0.timestamp < $1.timestamp })?.value
         let post = postSamples.min(by: { $0.timestamp < $1.timestamp })?.value
 
@@ -212,7 +319,7 @@ struct EventDetector {
 
     private func findNearestWaterTemp(temps: [HealthSample], near time: Date) -> Double? {
         let waterTemps = temps.filter { $0.type == .waterTemperature }
-        let window: TimeInterval = 5 * 60 // 5 minutes
+        let window: TimeInterval = 5 * 60
 
         return waterTemps
             .filter { abs($0.timestamp.timeIntervalSince(time)) <= window }

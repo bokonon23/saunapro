@@ -19,6 +19,7 @@ final class HealthKitManager: Sendable {
             HKQuantityType(.heartRateVariabilitySDNN),
             HKQuantityType(.heartRateRecoveryOneMinute),
             HKQuantityType(.bodyTemperature),
+            HKQuantityType(.stepCount),
         ]
         if #available(iOS 16.0, *) {
             types.insert(HKQuantityType(.appleSleepingWristTemperature))
@@ -63,6 +64,10 @@ final class HealthKitManager: Sendable {
         try await querySamples(type: .heartRateRecovery, quantityType: HKQuantityType(.heartRateRecoveryOneMinute), unit: .count().unitDivided(by: .minute()), date: date)
     }
 
+    func stepCountSamples(for date: Date) async throws -> [HealthSample] {
+        try await querySamples(type: .stepCount, quantityType: HKQuantityType(.stepCount), unit: .count(), date: date)
+    }
+
     // MARK: - Full Day Query
 
     func fetchDayData(for date: Date) async throws -> DayData {
@@ -71,6 +76,7 @@ final class HealthKitManager: Sendable {
         async let rhr = restingHeartRate(for: date)
         async let waterTemp = waterTemperatureSamples(for: date)
         async let wristTemp = wristTemperatureSamples(for: date)
+        async let steps = stepCountSamples(for: date)
 
         let allTemp = try await waterTemp + wristTemp
 
@@ -79,6 +85,7 @@ final class HealthKitManager: Sendable {
             heartRateSamples: try await hr,
             hrvSamples: try await hrv,
             temperatureSamples: allTemp,
+            stepSamples: try await steps,
             restingHeartRate: try await rhr
         )
     }

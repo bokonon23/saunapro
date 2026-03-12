@@ -13,7 +13,28 @@ final class DataManager {
     var historyScanProgress: String?
 
     private let healthKit = HealthKitManager.shared
-    private let detector = EventDetector()
+
+    /// Build detector config from user settings (AppStorage values).
+    private func makeDetector() -> EventDetector {
+        let sensitivity = UserDefaults.standard.double(forKey: "detectionSensitivity")
+        let minMinutes = UserDefaults.standard.double(forKey: "saunaMinMinutes")
+        let startHour = UserDefaults.standard.integer(forKey: "habitualStartHour")
+        let endHour = UserDefaults.standard.integer(forKey: "habitualEndHour")
+
+        var config = EventDetector.Config()
+        if sensitivity > 0 {
+            config.elevationTarget = sensitivity
+            config.peakThreshold = sensitivity + 0.3
+        }
+        if minMinutes > 0 {
+            config.saunaMinMinutes = minMinutes
+        }
+        if startHour > 0 && endHour > startHour {
+            config.habitualWindows = [(start: startHour, end: endHour)]
+        }
+
+        return EventDetector(config: config)
+    }
 
     func loadToday() async {
         await loadDay(Date())
@@ -22,6 +43,8 @@ final class DataManager {
     func loadDay(_ date: Date) async {
         isLoading = true
         errorMessage = nil
+
+        let detector = makeDetector()
 
         do {
             let data: DayData
@@ -82,17 +105,20 @@ final class DataManager {
             return
         }
 
+        let detector = makeDetector()
+
         // Get workout times so we can exclude exercise sessions
         let workoutTimes = await healthKit.workoutTimeRanges(days: days)
 
         let calendar = Calendar.current
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+
         for dayOffset in 0..<days {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) else { continue }
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
             let dateKey = dateFormatter.string(from: date)
 
-            historyScanProgress = "Scanning \(dateFormatter.string(from: date))..."
+            historyScanProgress = "Scanning \(dateKey)..."
 
             // Skip if we already have sessions for this day
             let descriptor = FetchDescriptor<SessionRecord>(

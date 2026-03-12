@@ -7,6 +7,7 @@ enum SampleType: String, Codable {
     case heartRateRecovery
     case wristTemperature
     case waterTemperature
+    case stepCount
 }
 
 struct HealthSample: Identifiable, Codable {
@@ -31,15 +32,17 @@ struct DayData: Identifiable {
     var heartRateSamples: [HealthSample]
     var hrvSamples: [HealthSample]
     var temperatureSamples: [HealthSample]
+    var stepSamples: [HealthSample]
     var restingHeartRate: Double?
     var sessions: [SessionRecord]
 
-    init(id: UUID = UUID(), date: Date, heartRateSamples: [HealthSample] = [], hrvSamples: [HealthSample] = [], temperatureSamples: [HealthSample] = [], restingHeartRate: Double? = nil, sessions: [SessionRecord] = []) {
+    init(id: UUID = UUID(), date: Date, heartRateSamples: [HealthSample] = [], hrvSamples: [HealthSample] = [], temperatureSamples: [HealthSample] = [], stepSamples: [HealthSample] = [], restingHeartRate: Double? = nil, sessions: [SessionRecord] = []) {
         self.id = id
         self.date = date
         self.heartRateSamples = heartRateSamples
         self.hrvSamples = hrvSamples
         self.temperatureSamples = temperatureSamples
+        self.stepSamples = stepSamples
         self.restingHeartRate = restingHeartRate
         self.sessions = sessions
     }
