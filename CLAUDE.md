@@ -8,17 +8,17 @@ This is a pure Xcode project with no external dependency managers.
 
 ```bash
 # Build
-xcodebuild -scheme DayShape -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 16'
+xcodebuild -scheme SaunaPro -configuration Debug -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 
 # Run tests
-xcodebuild -scheme DayShape test -destination 'platform=iOS Simulator,name=iPhone 16'
+xcodebuild -scheme SaunaPro test -destination 'platform=iOS Simulator,name=iPhone 17 Pro'
 ```
 
 Prefer building/running through Xcode directly (Cmd+B / Cmd+R / Cmd+U).
 
 ## Project Overview
 
-**DayShape** is a health/fitness iOS app integrating with Apple HealthKit. Very early stage — currently only an app entry point and placeholder UI exist.
+**SaunaPro** is an AI-powered sauna & cold plunge tracking iOS app integrating with Apple HealthKit. It auto-detects sessions from Apple Watch data and provides coaching insights.
 
 - **Deployment target**: iOS 26.2
 - **Xcode**: 26.3
@@ -29,10 +29,11 @@ Prefer building/running through Xcode directly (Cmd+B / Cmd+R / Cmd+U).
 - SwiftUI app lifecycle (`@main`, `WindowGroup`)
 - `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` — all types are implicitly `@MainActor` unless otherwise specified
 - HealthKit entitlements enabled: full access, health records, and background delivery
+- Source folder is `DayShape/` (retained from original project name)
 
 ## Key Entitlements
 
-`DayShape/DayShape.entitlements` enables:
+`DayShape/SaunaPro.entitlements` enables:
 - `com.apple.developer.healthkit`
 - `com.apple.developer.healthkit.access`
 - `com.apple.developer.healthkit.background-delivery`
