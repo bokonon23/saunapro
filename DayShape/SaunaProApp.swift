@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct SaunaProApp: App {
@@ -14,5 +15,6 @@ struct SaunaProApp: App {
             ContentView()
                 .preferredColorScheme(.dark)
         }
+        .modelContainer(for: SessionRecord.self)
     }
 }
