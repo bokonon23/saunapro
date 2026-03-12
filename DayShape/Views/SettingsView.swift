@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 struct SettingsView: View {
     @AppStorage("detectionSensitivity") private var detectionSensitivity: Double = 1.5
@@ -6,6 +7,9 @@ struct SettingsView: View {
     @AppStorage("habitualStartHour") private var habitualStartHour: Int = 0
     @AppStorage("habitualEndHour") private var habitualEndHour: Int = 0
     @AppStorage("hasScannedHistory") private var hasScannedHistory = false
+    @Environment(\.modelContext) private var modelContext
+    @State private var showRescanConfirmation = false
+    @State private var didRescan = false
 
     var body: some View {
         NavigationStack {
@@ -83,12 +87,30 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Button("Rescan Last 30 Days") {
-                        hasScannedHistory = false
+                    Button(didRescan ? "Done! Go to Day View to scan." : "Rescan Last 30 Days") {
+                        showRescanConfirmation = true
                     }
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(didRescan ? .green : .orange)
+                    .confirmationDialog("Rescan History", isPresented: $showRescanConfirmation) {
+                        Button("Clear & Rescan", role: .destructive) {
+                            // Delete all auto-detected sessions
+                            let descriptor = FetchDescriptor<SessionRecord>(
+                                predicate: #Predicate<SessionRecord> { $0.source == "autoDetected" }
+                            )
+                            if let existing = try? modelContext.fetch(descriptor) {
+                                for session in existing {
+                                    modelContext.delete(session)
+                                }
+                                try? modelContext.save()
+                            }
+                            hasScannedHistory = false
+                            didRescan = true
+                        }
+                    } message: {
+                        Text("This will delete all auto-detected sessions and rescan with your current settings.")
+                    }
                 } footer: {
-                    Text("Clears saved sessions and rescans your HealthKit data with current detection settings. Open Day View after tapping to trigger the scan.")
+                    Text("Clears saved sessions and rescans your HealthKit data with current detection settings. Switch to Day View after to trigger the scan.")
                 }
 
                 Section("About") {
