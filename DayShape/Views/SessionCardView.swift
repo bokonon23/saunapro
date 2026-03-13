@@ -2,6 +2,9 @@ import SwiftUI
 
 struct SessionCardView: View {
     let session: SessionRecord
+    var onConfirm: (() -> Void)?
+    var onDismiss: (() -> Void)?
+    var onChangeType: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -9,17 +12,28 @@ struct SessionCardView: View {
             HStack {
                 Image(systemName: session.type.icon)
                     .font(.title2)
-                    .foregroundStyle(session.type == .sauna ? .orange : .cyan)
+                    .foregroundStyle(session.type.color)
 
                 VStack(alignment: .leading) {
-                    Text(session.type.displayName)
-                        .font(.headline)
+                    HStack(spacing: 6) {
+                        Text(session.type.displayName)
+                            .font(.headline)
+
+                        // Status badge
+                        statusBadge
+                    }
                     Text(timeRange)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
                 Spacer()
+
+                if session.sessionSource == .watchApp {
+                    Image(systemName: "applewatch")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                }
 
                 Text(String(format: "%.0f min", session.durationMinutes))
                     .font(.title3.bold())
@@ -63,10 +77,74 @@ struct SessionCardView: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
+
+            // Action buttons — only for auto-detected, unconfirmed sessions
+            if session.sessionStatus == .detected {
+                Divider()
+                    .padding(.top, 2)
+
+                HStack(spacing: 12) {
+                    Button {
+                        onConfirm?()
+                    } label: {
+                        Label("Confirm", systemImage: "checkmark.circle.fill")
+                            .font(.caption.bold())
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                    .controlSize(.small)
+
+                    Button {
+                        onChangeType?()
+                    } label: {
+                        Label(
+                            session.type == .sauna ? "Cold Exposure" : "Sauna",
+                            systemImage: session.type == .sauna ? "snowflake" : "flame.fill"
+                        )
+                        .font(.caption.bold())
+                        .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(session.type == .sauna ? .cyan : .orange)
+                    .controlSize(.small)
+
+                    Button {
+                        onDismiss?()
+                    } label: {
+                        Label("Not This", systemImage: "xmark.circle.fill")
+                            .font(.caption.bold())
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.gray)
+                    .controlSize(.small)
+                }
+            }
         }
         .padding()
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    @ViewBuilder
+    private var statusBadge: some View {
+        switch session.sessionStatus {
+        case .confirmed:
+            Image(systemName: "checkmark.seal.fill")
+                .font(.caption)
+                .foregroundStyle(.green)
+        case .detected:
+            Text("Auto")
+                .font(.caption2.bold())
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
+                .background(.orange.opacity(0.2))
+                .clipShape(Capsule())
+                .foregroundStyle(.orange)
+        case .dismissed:
+            EmptyView()
+        }
     }
 
     private var timeRange: String {

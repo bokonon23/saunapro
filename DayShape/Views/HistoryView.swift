@@ -25,7 +25,7 @@ struct HistoryView: View {
                                     HStack {
                                         Image(systemName: session.type.icon)
                                             .font(.title3)
-                                            .foregroundStyle(session.type == .sauna ? .orange : .cyan)
+                                            .foregroundStyle(session.type.color)
                                             .frame(width: 30)
 
                                         VStack(alignment: .leading, spacing: 2) {

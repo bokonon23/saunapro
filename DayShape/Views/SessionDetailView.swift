@@ -21,7 +21,7 @@ struct SessionDetailView: View {
                 HStack {
                     Image(systemName: session.type.icon)
                         .font(.largeTitle)
-                        .foregroundStyle(session.type == .sauna ? .orange : .cyan)
+                        .foregroundStyle(session.type.color)
                     VStack(alignment: .leading) {
                         Text(session.type.displayName)
                             .font(.title2.bold())
@@ -37,6 +37,17 @@ struct SessionDetailView: View {
                 if let dayData {
                     zoomedChart(dayData: dayData)
                         .padding(.horizontal)
+                }
+
+                // HR Benefit Zones (sauna or cold)
+                if session.type.isTherapy, let dayData {
+                    if session.type == .sauna {
+                        hrZoneSection(dayData: dayData)
+                            .padding(.horizontal)
+                    } else {
+                        coldZoneSection(dayData: dayData)
+                            .padding(.horizontal)
+                    }
                 }
 
                 // Key metrics grid
@@ -80,14 +91,37 @@ struct SessionDetailView: View {
                 .font(.headline)
 
             Chart {
-                // Session zone
-                RectangleMark(
-                    xStart: .value("Start", session.startTime),
-                    xEnd: .value("End", session.endTime),
-                    yStart: nil,
-                    yEnd: nil
-                )
-                .foregroundStyle(session.type == .sauna ? Color.orange.opacity(0.15) : Color.cyan.opacity(0.15))
+                // HR zone background bands (only within session window)
+                if session.type == .sauna {
+                    ForEach(HRZone.allCases, id: \.label) { zone in
+                        RectangleMark(
+                            xStart: .value("Start", session.startTime),
+                            xEnd: .value("End", session.endTime),
+                            yStart: .value("ZoneMin", zone.minBPM),
+                            yEnd: .value("ZoneMax", zone.maxBPM)
+                        )
+                        .foregroundStyle(zone.color.opacity(0.18))
+                    }
+                } else if session.type == .coldPlunge {
+                    ForEach(ColdZone.allCases, id: \.label) { zone in
+                        RectangleMark(
+                            xStart: .value("Start", session.startTime),
+                            xEnd: .value("End", session.endTime),
+                            yStart: .value("ZoneMin", zone.minBPM),
+                            yEnd: .value("ZoneMax", zone.maxBPM)
+                        )
+                        .foregroundStyle(zone.color.opacity(0.18))
+                    }
+                } else {
+                    // Exercise session highlight
+                    RectangleMark(
+                        xStart: .value("Start", session.startTime),
+                        xEnd: .value("End", session.endTime),
+                        yStart: nil,
+                        yEnd: nil
+                    )
+                    .foregroundStyle(Color.green.opacity(0.15))
+                }
 
                 // Baseline line
                 if let baseline = session.baselineHR {
@@ -133,6 +167,43 @@ struct SessionDetailView: View {
                 }
             }
             .frame(height: 220)
+
+            // Zone legend
+            if session.type == .sauna {
+                HStack(spacing: 0) {
+                    ForEach(HRZone.allCases, id: \.label) { zone in
+                        HStack(spacing: 3) {
+                            Circle()
+                                .fill(zone.color)
+                                .frame(width: 6, height: 6)
+                            Text(zone.label)
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                        }
+                        if zone.label != HRZone.allCases.last?.label {
+                            Spacer()
+                        }
+                    }
+                }
+                .padding(.top, 4)
+            } else if session.type == .coldPlunge {
+                HStack(spacing: 0) {
+                    ForEach(ColdZone.allCases, id: \.label) { zone in
+                        HStack(spacing: 3) {
+                            Circle()
+                                .fill(zone.color)
+                                .frame(width: 6, height: 6)
+                            Text(zone.label)
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                        }
+                        if zone.label != ColdZone.allCases.last?.label {
+                            Spacer()
+                        }
+                    }
+                }
+                .padding(.top, 4)
+            }
         }
         .padding()
         .background(.ultraThinMaterial)
@@ -267,6 +338,175 @@ struct SessionDetailView: View {
         .padding()
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16))
+    }
+
+    // MARK: - HR Benefit Zones
+
+    private func sessionSamples(from dayData: DayData) -> [(timestamp: Date, bpm: Double)] {
+        dayData.heartRateSamples
+            .filter { $0.timestamp >= session.startTime && $0.timestamp <= session.endTime }
+            .map { (timestamp: $0.timestamp, bpm: $0.value) }
+    }
+
+    @ViewBuilder
+    private func hrZoneSection(dayData: DayData) -> some View {
+        let samples = sessionSamples(from: dayData)
+        let breakdown = HRZone.zoneBreakdown(samples: samples)
+        let totalTime = breakdown.values.reduce(0, +)
+
+        if totalTime > 0 {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("Benefit Zones")
+                        .font(.headline)
+                    Spacer()
+                    if let dominant = HRZone.dominantZone(from: breakdown) {
+                        Label(dominant.label, systemImage: dominant.icon)
+                            .font(.caption.bold())
+                            .foregroundStyle(dominant.color)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(dominant.color.opacity(0.15))
+                            .clipShape(Capsule())
+                    }
+                }
+
+                // Stacked bar showing zone proportions
+                GeometryReader { geo in
+                    HStack(spacing: 1) {
+                        ForEach(HRZone.allCases, id: \.label) { zone in
+                            if let time = breakdown[zone], time > 0 {
+                                let fraction = time / totalTime
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(zone.color.gradient)
+                                    .frame(width: max(geo.size.width * fraction - 1, 4))
+                            }
+                        }
+                    }
+                }
+                .frame(height: 12)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                // Zone details
+                ForEach(HRZone.allCases, id: \.label) { zone in
+                    if let time = breakdown[zone], time > 0 {
+                        HStack(spacing: 12) {
+                            Image(systemName: zone.icon)
+                                .font(.body)
+                                .foregroundStyle(zone.color)
+                                .frame(width: 24)
+
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(zone.label)
+                                    .font(.subheadline.bold())
+                                Text(zone.subtitle)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            VStack(alignment: .trailing, spacing: 1) {
+                                Text(formatDuration(time))
+                                    .font(.subheadline.bold())
+                                    .monospacedDigit()
+                                Text(zone.bpmRange)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+            .padding()
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    @ViewBuilder
+    private func coldZoneSection(dayData: DayData) -> some View {
+        let samples = sessionSamples(from: dayData)
+        let breakdown = ColdZone.zoneBreakdown(samples: samples)
+        let totalTime = breakdown.values.reduce(0, +)
+
+        if totalTime > 0 {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("Cold Response Zones")
+                        .font(.headline)
+                    Spacer()
+                    if let dominant = ColdZone.dominantZone(from: breakdown) {
+                        Label(dominant.label, systemImage: dominant.icon)
+                            .font(.caption.bold())
+                            .foregroundStyle(dominant.color)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(dominant.color.opacity(0.15))
+                            .clipShape(Capsule())
+                    }
+                }
+
+                // Stacked bar showing zone proportions
+                GeometryReader { geo in
+                    HStack(spacing: 1) {
+                        ForEach(ColdZone.allCases, id: \.label) { zone in
+                            if let time = breakdown[zone], time > 0 {
+                                let fraction = time / totalTime
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(zone.color.gradient)
+                                    .frame(width: max(geo.size.width * fraction - 1, 4))
+                            }
+                        }
+                    }
+                }
+                .frame(height: 12)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+                // Zone details
+                ForEach(ColdZone.allCases, id: \.label) { zone in
+                    if let time = breakdown[zone], time > 0 {
+                        HStack(spacing: 12) {
+                            Image(systemName: zone.icon)
+                                .font(.body)
+                                .foregroundStyle(zone.color)
+                                .frame(width: 24)
+
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(zone.label)
+                                    .font(.subheadline.bold())
+                                Text(zone.subtitle)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            VStack(alignment: .trailing, spacing: 1) {
+                                Text(formatDuration(time))
+                                    .font(.subheadline.bold())
+                                    .monospacedDigit()
+                                Text(zone.bpmRange)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
+            .padding()
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
+    }
+
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        let minutes = Int(seconds) / 60
+        let secs = Int(seconds) % 60
+        if minutes > 0 {
+            return "\(minutes)m \(secs)s"
+        }
+        return "\(secs)s"
     }
 
     // MARK: - Helpers

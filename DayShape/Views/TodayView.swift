@@ -63,7 +63,12 @@ struct DayView: View {
 
                                 ForEach(dataManager.sessions) { session in
                                     NavigationLink(value: session) {
-                                        SessionCardView(session: session)
+                                        SessionCardView(
+                                            session: session,
+                                            onConfirm: { confirmSession(session) },
+                                            onDismiss: { dismissSession(session) },
+                                            onChangeType: { changeSessionType(session) }
+                                        )
                                     }
                                     .buttonStyle(.plain)
                                     .padding(.horizontal)
@@ -133,7 +138,6 @@ struct DayView: View {
                     .font(.title3.bold())
 
                 if !isToday {
-                    let formatter = DateFormatter()
                     Text({
                         let f = DateFormatter()
                         f.dateFormat = "d MMMM yyyy"
@@ -165,7 +169,65 @@ struct DayView: View {
 
     private func loadSelectedDay() async {
         await dataManager.loadDay(selectedDate)
+
+        // Merge in confirmed/dismissed sessions from SwiftData that fresh detection might miss
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dayKey = dateFormatter.string(from: selectedDate)
+        let detectedStatus = SessionStatus.detected.rawValue
+        let confirmedDescriptor = FetchDescriptor<SessionRecord>(
+            predicate: #Predicate {
+                $0.dateKey == dayKey && $0.status != detectedStatus
+            }
+        )
+        if let confirmedSessions = try? modelContext.fetch(confirmedDescriptor) {
+            // Remove any freshly-detected sessions that overlap with confirmed ones
+            dataManager.sessions.removeAll { fresh in
+                confirmedSessions.contains { confirmed in
+                    fresh.startTime < confirmed.endTime && fresh.endTime > confirmed.startTime
+                }
+            }
+            // Add the confirmed sessions back in
+            dataManager.sessions.append(contentsOf: confirmedSessions)
+            // Sort by start time
+            dataManager.sessions.sort { $0.startTime < $1.startTime }
+        }
+
         saveDaySessions()
+    }
+
+    private func confirmSession(_ session: SessionRecord) {
+        // Ensure the session is in SwiftData before updating
+        ensureInserted(session)
+        session.status = SessionStatus.confirmed.rawValue
+        try? modelContext.save()
+    }
+
+    private func dismissSession(_ session: SessionRecord) {
+        ensureInserted(session)
+        session.status = SessionStatus.dismissed.rawValue
+        try? modelContext.save()
+        // Remove from the current view
+        dataManager.sessions.removeAll { $0.id == session.id }
+    }
+
+    private func changeSessionType(_ session: SessionRecord) {
+        ensureInserted(session)
+        // Toggle between sauna and cold exposure
+        if session.type == .sauna {
+            session.sessionType = SessionType.coldPlunge.rawValue
+        } else {
+            session.sessionType = SessionType.sauna.rawValue
+        }
+        try? modelContext.save()
+    }
+
+    /// Make sure a session is tracked by SwiftData before mutating it.
+    /// Freshly-detected sessions from loadDay() are plain objects not yet inserted.
+    private func ensureInserted(_ session: SessionRecord) {
+        if session.modelContext == nil {
+            modelContext.insert(session)
+        }
     }
 
     private func saveDaySessions() {
@@ -173,9 +235,18 @@ struct DayView: View {
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let dayKey = dateFormatter.string(from: selectedDate)
 
-        // Remove old auto-detected sessions for this day and replace with fresh detection
+        // Only delete sessions that are still in "detected" status — preserve confirmed/dismissed
+        // Also delete stale exercise sessions (they're re-created fresh from HealthKit each load)
+        let detectedStatus = SessionStatus.detected.rawValue
+        let autoSource = SessionSource.autoDetected.rawValue
+        let exerciseType = SessionType.exercise.rawValue
         let descriptor = FetchDescriptor<SessionRecord>(
-            predicate: #Predicate { $0.dateKey == dayKey && $0.source == "autoDetected" }
+            predicate: #Predicate {
+                $0.dateKey == dayKey && (
+                    ($0.source == autoSource && $0.status == detectedStatus) ||
+                    $0.sessionType == exerciseType
+                )
+            }
         )
         if let existing = try? modelContext.fetch(descriptor) {
             for old in existing {
@@ -183,7 +254,28 @@ struct DayView: View {
             }
         }
 
+        // Fetch all preserved (confirmed/dismissed) sessions for this day (excluding exercise)
+        let confirmedDescriptor = FetchDescriptor<SessionRecord>(
+            predicate: #Predicate {
+                $0.dateKey == dayKey && $0.status != detectedStatus && $0.sessionType != exerciseType
+            }
+        )
+        let preservedSessions = (try? modelContext.fetch(confirmedDescriptor)) ?? []
+        let preservedIDs = Set(preservedSessions.map(\.id))
+
         for session in dataManager.sessions {
+            // Skip sessions already in SwiftData (confirmed/dismissed or already inserted)
+            if preservedIDs.contains(session.id) { continue }
+            if session.modelContext != nil { continue }
+
+            // Skip if this session overlaps with an already-confirmed/dismissed one (except exercise)
+            if session.type != .exercise {
+                let overlapsPreserved = preservedSessions.contains { existing in
+                    session.startTime < existing.endTime && session.endTime > existing.startTime
+                }
+                if overlapsPreserved { continue }
+            }
+
             modelContext.insert(session)
         }
         try? modelContext.save()

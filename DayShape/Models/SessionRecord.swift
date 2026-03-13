@@ -1,37 +1,6 @@
 import Foundation
 import SwiftData
 
-enum SessionType: String, Codable, CaseIterable {
-    case sauna
-    case coldPlunge
-
-    var displayName: String {
-        switch self {
-        case .sauna: "Sauna"
-        case .coldPlunge: "Cold Plunge"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .sauna: "flame.fill"
-        case .coldPlunge: "snowflake"
-        }
-    }
-}
-
-enum SessionSource: String, Codable {
-    case autoDetected
-    case manual
-    case csvImport
-}
-
-enum SessionStatus: String, Codable {
-    case detected
-    case confirmed
-    case dismissed
-}
-
 @Model
 final class SessionRecord {
     var id: UUID

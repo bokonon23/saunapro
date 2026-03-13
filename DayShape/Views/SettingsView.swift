@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import HealthKit
 
 struct SettingsView: View {
     @AppStorage("detectionSensitivity") private var detectionSensitivity: Double = 1.5
@@ -7,9 +8,12 @@ struct SettingsView: View {
     @AppStorage("habitualStartHour") private var habitualStartHour: Int = 0
     @AppStorage("habitualEndHour") private var habitualEndHour: Int = 0
     @AppStorage("hasScannedHistory") private var hasScannedHistory = false
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @Environment(\.modelContext) private var modelContext
     @State private var showRescanConfirmation = false
     @State private var didRescan = false
+    @State private var selectedTriggers: Set<UInt> = WorkoutTrigger.savedTriggers()
+    @State private var showWelcomeScreen = false
 
     var body: some View {
         NavigationStack {
@@ -27,6 +31,47 @@ struct SettingsView: View {
                                 .foregroundStyle(.yellow)
                         }
                     }
+                }
+
+                Section {
+                    ForEach(WorkoutTrigger.allCases) { trigger in
+                        Button {
+                            if selectedTriggers.contains(trigger.id) {
+                                // Don't allow deselecting all triggers
+                                if selectedTriggers.count > 1 {
+                                    selectedTriggers.remove(trigger.id)
+                                }
+                            } else {
+                                selectedTriggers.insert(trigger.id)
+                            }
+                            WorkoutTrigger.saveTriggers(selectedTriggers)
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: trigger.icon)
+                                    .font(.title3)
+                                    .foregroundStyle(selectedTriggers.contains(trigger.id) ? .orange : .secondary)
+                                    .frame(width: 28)
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(trigger.label)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.primary)
+                                    Text(trigger.subtitle)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                Spacer()
+
+                                Image(systemName: selectedTriggers.contains(trigger.id) ? "checkmark.circle.fill" : "circle")
+                                    .foregroundStyle(selectedTriggers.contains(trigger.id) ? .orange : .secondary)
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Workout Triggers")
+                } footer: {
+                    Text("Select which workout types your watch uses for sauna sessions. Apple Watch users: use \"Other\". Garmin users: try \"Yoga\" or \"Mind & Body\".")
                 }
 
                 Section {
@@ -113,14 +158,66 @@ struct SettingsView: View {
                     Text("Clears saved sessions and rescans your HealthKit data with current detection settings. Switch to Day View after to trigger the scan.")
                 }
 
+                Section("Apple Watch") {
+                    HStack {
+                        Label("Watch App", systemImage: "applewatch")
+                        Spacer()
+                        if PhoneConnectivityManager.shared.isPaired {
+                            Text("Paired")
+                                .font(.caption)
+                                .foregroundStyle(.green)
+                        } else {
+                            Text("Not Paired")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    if PhoneConnectivityManager.shared.isPaired {
+                        HStack {
+                            Text("Connection")
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text(PhoneConnectivityManager.shared.isReachable ? "Active" : "Standby")
+                                .font(.caption)
+                                .foregroundStyle(PhoneConnectivityManager.shared.isReachable ? .green : .yellow)
+                        }
+                    }
+                }
+
                 Section("About") {
                     Label("SaunaPro v1.0", systemImage: "info.circle")
-                    Label("AI-Powered Sauna & Cold Plunge Coach", systemImage: "brain")
+                    Label("Sauna & Cold Exposure Tracking", systemImage: "brain")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+
+                    NavigationLink {
+                        PrivacyPolicyView()
+                    } label: {
+                        Label("Privacy Policy", systemImage: "hand.raised.fill")
+                    }
+
+                    Button {
+                        showWelcomeScreen = true
+                    } label: {
+                        Label("Show Welcome Screen", systemImage: "hand.wave")
+                    }
                 }
             }
             .navigationTitle("Settings")
+            .fullScreenCover(isPresented: $showWelcomeScreen) {
+                WelcomeView(hasCompletedOnboarding: .constant(false))
+                    .overlay(alignment: .topTrailing) {
+                        Button {
+                            showWelcomeScreen = false
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.title2)
+                                .foregroundStyle(.white.opacity(0.7))
+                                .padding()
+                        }
+                    }
+            }
         }
     }
 

@@ -8,6 +8,9 @@ struct EventDetector {
         var peakThreshold: Double = 1.8          // Peak must reach baseline × this
         var maxGapMinutes: Double = 10           // Max gap between samples in same window
 
+        // Session merging — combine nearby windows into one sauna visit
+        var mergeGapMinutes: Double = 25         // Merge windows within this gap (covers breaks between rounds)
+
         // Duration
         var saunaMinMinutes: Double = 10         // Saunas last at least 10 min
         var coldPlungeMaxMinutes: Double = 10    // Cold plunges are short
@@ -40,8 +43,9 @@ struct EventDetector {
         let baselineHR = computeBaseline(samples: hrSamples, dayStart: dayData.date)
         guard baselineHR > 0 else { return [] }
 
-        // Find elevated HR windows
-        let windows = findElevatedWindows(samples: hrSamples, baselineHR: baselineHR)
+        // Find elevated HR windows and merge nearby ones (sauna rounds with breaks)
+        let rawWindows = findElevatedWindows(samples: hrSamples, baselineHR: baselineHR)
+        let windows = mergeNearbyWindows(rawWindows, allSamples: hrSamples)
 
         // Score and filter each window
         var sessions: [SessionRecord] = []
@@ -234,6 +238,51 @@ struct EventDetector {
         }
 
         return windows
+    }
+
+    /// Merge windows that are close together into a single sauna visit.
+    /// A typical sauna session has multiple rounds with short breaks (cool-down, shower, cold plunge).
+    /// Without merging, each round appears as a separate session.
+    private func mergeNearbyWindows(_ windows: [DetectedWindow], allSamples: [HealthSample]) -> [DetectedWindow] {
+        guard windows.count > 1 else { return windows }
+
+        let mergeGap = config.mergeGapMinutes * 60  // seconds
+
+        var merged: [DetectedWindow] = []
+        var current = windows[0]
+
+        for i in 1..<windows.count {
+            let next = windows[i]
+            let gap = next.startTime.timeIntervalSince(current.endTime)
+
+            if gap <= mergeGap {
+                // Merge: combine into one window spanning both, including gap samples
+                let combinedStart = current.startTime
+                let combinedEnd = next.endTime
+
+                // Gather all HR samples across the entire merged span
+                let combinedSamples = allSamples.filter {
+                    $0.timestamp >= combinedStart && $0.timestamp <= combinedEnd
+                }
+
+                let peakSample = combinedSamples.max(by: { $0.value < $1.value })
+
+                current = DetectedWindow(
+                    startTime: combinedStart,
+                    endTime: combinedEnd,
+                    peakTime: peakSample?.timestamp ?? current.peakTime,
+                    peakHR: max(current.peakHR, next.peakHR),
+                    samples: combinedSamples
+                )
+            } else {
+                // Gap too large — keep current and start fresh
+                merged.append(current)
+                current = next
+            }
+        }
+        merged.append(current)
+
+        return merged
     }
 
     private func finalizeWindow(samples: [HealthSample], peakRequired: Double) -> DetectedWindow? {

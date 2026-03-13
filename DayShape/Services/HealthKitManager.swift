@@ -96,10 +96,15 @@ final class HealthKitManager: Sendable {
         let start: Date
         let end: Date
         let activityType: HKWorkoutActivityType
+        let sourceName: String
+        let totalEnergy: Double?       // kcal
+        let averageHeartRate: Double?
+        let peakHeartRate: Double?
     }
 
     /// Returns time ranges of recorded workouts for the last N days.
     /// Used to filter out exercise (swimming, running, etc.) from sauna detection.
+    /// "Other" workouts are returned separately — they're potential sauna sessions.
     func workoutTimeRanges(days: Int, from date: Date = Date()) async -> [WorkoutTimeRange] {
         guard isAvailable else { return [] }
 
@@ -118,15 +123,91 @@ final class HealthKitManager: Sendable {
         do {
             let workouts = try await descriptor.result(for: store)
             return workouts.map { workout in
-                WorkoutTimeRange(
+                let energy = workout.totalEnergyBurned?.doubleValue(for: .kilocalorie())
+                // Extract HR stats from workout metadata/statistics
+                let avgHR = workout.statistics(for: HKQuantityType(.heartRate))?
+                    .averageQuantity()?.doubleValue(for: .count().unitDivided(by: .minute()))
+                let peakHR = workout.statistics(for: HKQuantityType(.heartRate))?
+                    .maximumQuantity()?.doubleValue(for: .count().unitDivided(by: .minute()))
+
+                return WorkoutTimeRange(
                     start: workout.startDate,
                     end: workout.endDate,
-                    activityType: workout.workoutActivityType
+                    activityType: workout.workoutActivityType,
+                    sourceName: workout.sourceRevision.source.name,
+                    totalEnergy: energy,
+                    averageHeartRate: avgHR,
+                    peakHeartRate: peakHR
                 )
             }
         } catch {
             return []
         }
+    }
+
+    /// Fetch workouts matching any of the given activity types for a specific date.
+    /// Used to find manually-started sauna/cold sessions (e.g. "Other" on Apple Watch, "Yoga" on Garmin).
+    struct TriggerWorkoutData: Sendable {
+        let start: Date
+        let end: Date
+        let duration: TimeInterval
+        let totalEnergyBurned: Double?  // kcal
+        let averageHeartRate: Double?
+        let maxHeartRate: Double?
+        let activityType: HKWorkoutActivityType
+        let sourceName: String
+    }
+
+    func triggerWorkouts(for date: Date, activityTypes: [HKWorkoutActivityType]) async -> [TriggerWorkoutData] {
+        guard isAvailable, !activityTypes.isEmpty else { return [] }
+
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else { return [] }
+
+        let datePredicate = HKQuery.predicateForSamples(withStart: startOfDay, end: endOfDay)
+
+        // Build OR predicate for all selected workout types
+        let typePredicates = activityTypes.map { HKQuery.predicateForWorkouts(with: $0) }
+        let typePredicate = NSCompoundPredicate(orPredicateWithSubpredicates: typePredicates)
+        let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [datePredicate, typePredicate])
+
+        let sortDescriptor = SortDescriptor(\HKWorkout.startDate, order: .forward)
+
+        let descriptor = HKSampleQueryDescriptor(
+            predicates: [.workout(compoundPredicate)],
+            sortDescriptors: [sortDescriptor]
+        )
+
+        do {
+            let workouts = try await descriptor.result(for: store)
+            return workouts.map { workout in
+                let hrType = HKQuantityType(.heartRate)
+                let unit = HKUnit.count().unitDivided(by: .minute())
+
+                let avgHR = workout.statistics(for: hrType)?.averageQuantity()?.doubleValue(for: unit)
+                let maxHR = workout.statistics(for: hrType)?.maximumQuantity()?.doubleValue(for: unit)
+                let energy = workout.totalEnergyBurned?.doubleValue(for: .kilocalorie())
+
+                return TriggerWorkoutData(
+                    start: workout.startDate,
+                    end: workout.endDate,
+                    duration: workout.duration,
+                    totalEnergyBurned: energy,
+                    averageHeartRate: avgHR,
+                    maxHeartRate: maxHR,
+                    activityType: workout.workoutActivityType,
+                    sourceName: workout.sourceRevision.source.name
+                )
+            }
+        } catch {
+            return []
+        }
+    }
+
+    /// Backwards-compatible convenience — fetches "Other" workouts only.
+    func otherWorkouts(for date: Date) async -> [TriggerWorkoutData] {
+        await triggerWorkouts(for: date, activityTypes: [.other])
     }
 
     // MARK: - Private

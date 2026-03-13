@@ -6,20 +6,95 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		EFBB74832F645E28004FE1E3 /* test Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = EFBB74822F645E28004FE1E3 /* test Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		EFCBA6FE2F6319BC00F27A5F /* SaunaProWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = EFCBA6FD2F6319BC00F27A5F /* SaunaProWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		EFBB74842F645E28004FE1E3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EFC32F812F62003000B13D3E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EFBB74812F645E28004FE1E3;
+			remoteInfo = "test Watch App";
+		};
+		EFCBA6FF2F6319BC00F27A5F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EFC32F812F62003000B13D3E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EFCBA6FC2F6319BC00F27A5F;
+			remoteInfo = "SaunaProWatch Watch App";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		EFBB748F2F645E28004FE1E3 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				EFBB74832F645E28004FE1E3 /* test Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EFCBA70A2F6319BD00F27A5F /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				EFCBA6FE2F6319BC00F27A5F /* SaunaProWatch Watch App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		EFBB747D2F645E28004FE1E3 /* test.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = test.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EFBB74822F645E28004FE1E3 /* test Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "test Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		EFC32F892F62003000B13D3E /* SaunaPro.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SaunaPro.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EFCBA6F82F6319BC00F27A5F /* SaunaProWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SaunaProWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		EFCBA6FD2F6319BC00F27A5F /* SaunaProWatch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SaunaProWatch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		EFBB74862F645E28004FE1E3 /* test Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "test Watch App";
+			sourceTree = "<group>";
+		};
 		EFC32F8B2F62003000B13D3E /* DayShape */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = DayShape;
 			sourceTree = "<group>";
 		};
+		EFCBA7012F6319BC00F27A5F /* SaunaProWatch Watch App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "SaunaProWatch Watch App";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		EFBB747F2F645E28004FE1E3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EFC32F862F62003000B13D3E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EFCBA6FA2F6319BC00F27A5F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +108,8 @@
 			isa = PBXGroup;
 			children = (
 				EFC32F8B2F62003000B13D3E /* DayShape */,
+				EFCBA7012F6319BC00F27A5F /* SaunaProWatch Watch App */,
+				EFBB74862F645E28004FE1E3 /* test Watch App */,
 				EFC32F8A2F62003000B13D3E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +118,10 @@
 			isa = PBXGroup;
 			children = (
 				EFC32F892F62003000B13D3E /* SaunaPro.app */,
+				EFCBA6F82F6319BC00F27A5F /* SaunaProWatch.app */,
+				EFCBA6FD2F6319BC00F27A5F /* SaunaProWatch Watch App.app */,
+				EFBB747D2F645E28004FE1E3 /* test.app */,
+				EFBB74822F645E28004FE1E3 /* test Watch App.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,7 +129,48 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		EFC32F882F62003000B13D3E /* DayShape */ = {
+		EFBB747C2F645E28004FE1E3 /* test */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EFBB74932F645E29004FE1E3 /* Build configuration list for PBXNativeTarget "test" */;
+			buildPhases = (
+				EFBB747B2F645E28004FE1E3 /* Resources */,
+				EFBB748F2F645E28004FE1E3 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				EFBB74852F645E28004FE1E3 /* PBXTargetDependency */,
+			);
+			name = test;
+			packageProductDependencies = (
+			);
+			productName = test;
+			productReference = EFBB747D2F645E28004FE1E3 /* test.app */;
+			productType = "com.apple.product-type.application.watchapp2-container";
+		};
+		EFBB74812F645E28004FE1E3 /* test Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EFBB74922F645E29004FE1E3 /* Build configuration list for PBXNativeTarget "test Watch App" */;
+			buildPhases = (
+				EFBB747E2F645E28004FE1E3 /* Sources */,
+				EFBB747F2F645E28004FE1E3 /* Frameworks */,
+				EFBB74802F645E28004FE1E3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				EFBB74862F645E28004FE1E3 /* test Watch App */,
+			);
+			name = "test Watch App";
+			packageProductDependencies = (
+			);
+			productName = "test Watch App";
+			productReference = EFBB74822F645E28004FE1E3 /* test Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
+		EFC32F882F62003000B13D3E /* SaunaPro */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = EFC32F942F62003100B13D3E /* Build configuration list for PBXNativeTarget "SaunaPro" */;
 			buildPhases = (
@@ -70,6 +192,47 @@
 			productReference = EFC32F892F62003000B13D3E /* SaunaPro.app */;
 			productType = "com.apple.product-type.application";
 		};
+		EFCBA6F72F6319BC00F27A5F /* SaunaProWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EFCBA70E2F6319BD00F27A5F /* Build configuration list for PBXNativeTarget "SaunaProWatch" */;
+			buildPhases = (
+				EFCBA6F62F6319BC00F27A5F /* Resources */,
+				EFCBA70A2F6319BD00F27A5F /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				EFCBA7002F6319BC00F27A5F /* PBXTargetDependency */,
+			);
+			name = SaunaProWatch;
+			packageProductDependencies = (
+			);
+			productName = SaunaProWatch;
+			productReference = EFCBA6F82F6319BC00F27A5F /* SaunaProWatch.app */;
+			productType = "com.apple.product-type.application.watchapp2-container";
+		};
+		EFCBA6FC2F6319BC00F27A5F /* SaunaProWatch Watch App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EFCBA70D2F6319BD00F27A5F /* Build configuration list for PBXNativeTarget "SaunaProWatch Watch App" */;
+			buildPhases = (
+				EFCBA6F92F6319BC00F27A5F /* Sources */,
+				EFCBA6FA2F6319BC00F27A5F /* Frameworks */,
+				EFCBA6FB2F6319BC00F27A5F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				EFCBA7012F6319BC00F27A5F /* SaunaProWatch Watch App */,
+			);
+			name = "SaunaProWatch Watch App";
+			packageProductDependencies = (
+			);
+			productName = "SaunaProWatch Watch App";
+			productReference = EFCBA6FD2F6319BC00F27A5F /* SaunaProWatch Watch App.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -80,7 +243,19 @@
 				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2630;
 				TargetAttributes = {
+					EFBB747C2F645E28004FE1E3 = {
+						CreatedOnToolsVersion = 26.3;
+					};
+					EFBB74812F645E28004FE1E3 = {
+						CreatedOnToolsVersion = 26.3;
+					};
 					EFC32F882F62003000B13D3E = {
+						CreatedOnToolsVersion = 26.3;
+					};
+					EFCBA6F72F6319BC00F27A5F = {
+						CreatedOnToolsVersion = 26.3;
+					};
+					EFCBA6FC2F6319BC00F27A5F = {
 						CreatedOnToolsVersion = 26.3;
 					};
 				};
@@ -99,13 +274,45 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				EFC32F882F62003000B13D3E /* DayShape */,
+				EFC32F882F62003000B13D3E /* SaunaPro */,
+				EFCBA6F72F6319BC00F27A5F /* SaunaProWatch */,
+				EFCBA6FC2F6319BC00F27A5F /* SaunaProWatch Watch App */,
+				EFBB747C2F645E28004FE1E3 /* test */,
+				EFBB74812F645E28004FE1E3 /* test Watch App */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		EFBB747B2F645E28004FE1E3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EFBB74802F645E28004FE1E3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EFC32F872F62003000B13D3E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EFCBA6F62F6319BC00F27A5F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EFCBA6FB2F6319BC00F27A5F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -115,7 +322,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		EFBB747E2F645E28004FE1E3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		EFC32F852F62003000B13D3E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EFCBA6F92F6319BC00F27A5F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -124,7 +345,118 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		EFBB74852F645E28004FE1E3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EFBB74812F645E28004FE1E3 /* test Watch App */;
+			targetProxy = EFBB74842F645E28004FE1E3 /* PBXContainerItemProxy */;
+		};
+		EFCBA7002F6319BC00F27A5F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EFCBA6FC2F6319BC00F27A5F /* SaunaProWatch Watch App */;
+			targetProxy = EFCBA6FF2F6319BC00F27A5F /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		EFBB748D2F645E28004FE1E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GA8X394Y2J;
+				INFOPLIST_KEY_CFBundleDisplayName = test;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brucemilligan.test;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		EFBB748E2F645E28004FE1E3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GA8X394Y2J;
+				INFOPLIST_KEY_CFBundleDisplayName = test;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brucemilligan.test;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		EFBB74902F645E28004FE1E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GA8X394Y2J;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = test;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brucemilligan.test.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Debug;
+		};
+		EFBB74912F645E28004FE1E3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GA8X394Y2J;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = test;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKWatchOnly = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brucemilligan.test.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.2;
+			};
+			name = Release;
+		};
 		EFC32F922F62003100B13D3E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -316,9 +648,133 @@
 			};
 			name = Release;
 		};
+		EFCBA7082F6319BD00F27A5F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GA8X394Y2J;
+				INFOPLIST_KEY_CFBundleDisplayName = SaunaPro;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brucemilligan.SaunaPro.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		EFCBA7092F6319BD00F27A5F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GA8X394Y2J;
+				INFOPLIST_KEY_CFBundleDisplayName = SaunaPro;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brucemilligan.SaunaPro.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		EFCBA70B2F6319BD00F27A5F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "SaunaProWatch Watch App/SaunaProWatch.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GA8X394Y2J;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SaunaPro;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "SaunaPro Watch tracks your heart rate during sauna and cold plunge sessions.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "SaunaPro Watch saves your workout sessions to Apple Health.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.brucemilligan.SaunaPro;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brucemilligan.SaunaPro.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
+			};
+			name = Debug;
+		};
+		EFCBA70C2F6319BD00F27A5F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "SaunaProWatch Watch App/SaunaProWatch.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = GA8X394Y2J;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = SaunaPro;
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "SaunaPro Watch tracks your heart rate during sauna and cold plunge sessions.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "SaunaPro Watch saves your workout sessions to Apple Health.";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.brucemilligan.SaunaPro;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.brucemilligan.SaunaPro.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		EFBB74922F645E29004FE1E3 /* Build configuration list for PBXNativeTarget "test Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EFBB74902F645E28004FE1E3 /* Debug */,
+				EFBB74912F645E28004FE1E3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EFBB74932F645E29004FE1E3 /* Build configuration list for PBXNativeTarget "test" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EFBB748D2F645E28004FE1E3 /* Debug */,
+				EFBB748E2F645E28004FE1E3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		EFC32F842F62003000B13D3E /* Build configuration list for PBXProject "SaunaPro" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -333,6 +789,24 @@
 			buildConfigurations = (
 				EFC32F952F62003100B13D3E /* Debug */,
 				EFC32F962F62003100B13D3E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EFCBA70D2F6319BD00F27A5F /* Build configuration list for PBXNativeTarget "SaunaProWatch Watch App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EFCBA70B2F6319BD00F27A5F /* Debug */,
+				EFCBA70C2F6319BD00F27A5F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EFCBA70E2F6319BD00F27A5F /* Build configuration list for PBXNativeTarget "SaunaProWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EFCBA7082F6319BD00F27A5F /* Debug */,
+				EFCBA7092F6319BD00F27A5F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
