@@ -56,12 +56,24 @@ struct DayView: View {
                             )
                             .padding(.top, 20)
                         } else {
+                            let sequences = ContrastDetector.detectSequences(sessions: dataManager.sessions)
+                            let sequenceSessionIds = Set(sequences.flatMap { $0.sessions.map(\.id) })
+                            let standaloneSessions = dataManager.sessions.filter { !sequenceSessionIds.contains($0.id) }
+
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("\(dataManager.sessions.count) Session\(dataManager.sessions.count == 1 ? "" : "s")")
+                                Text(sessionCountLabel(sequences: sequences, standalone: standaloneSessions))
                                     .font(.headline)
                                     .padding(.horizontal)
 
-                                ForEach(dataManager.sessions) { session in
+                                ForEach(sequences) { sequence in
+                                    NavigationLink(value: sequence.sessions.first!) {
+                                        ContrastSequenceCardView(sequence: sequence)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.horizontal)
+                                }
+
+                                ForEach(standaloneSessions) { session in
                                     NavigationLink(value: session) {
                                         SessionCardView(
                                             session: session,
@@ -75,6 +87,10 @@ struct DayView: View {
                                 }
                             }
                         }
+
+                        // Coaching insights
+                        InsightsView()
+                            .padding(.top, 8)
                     } else {
                         VStack(spacing: 24) {
                             Spacer().frame(height: 60)
@@ -115,6 +131,17 @@ struct DayView: View {
                 }
             }
         }
+    }
+
+    private func sessionCountLabel(sequences: [ContrastSequence], standalone: [SessionRecord]) -> String {
+        var parts: [String] = []
+        if !sequences.isEmpty {
+            parts.append("\(sequences.count) contrast sequence\(sequences.count == 1 ? "" : "s")")
+        }
+        if !standalone.isEmpty {
+            parts.append("\(standalone.count) session\(standalone.count == 1 ? "" : "s")")
+        }
+        return parts.joined(separator: " · ")
     }
 
     // MARK: - Date Navigation
@@ -193,6 +220,7 @@ struct DayView: View {
             dataManager.sessions.sort { $0.startTime < $1.startTime }
         }
 
+        ContrastDetector.assignGroupIds(sessions: dataManager.sessions)
         saveDaySessions()
     }
 

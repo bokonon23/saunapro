@@ -13,6 +13,14 @@ struct SessionView: View {
             ColdPlungeView()
         case .summary:
             SummaryView()
+        case .contrastSauna:
+            ContrastPhaseView(phase: "sauna")
+        case .contrastCold:
+            ContrastPhaseView(phase: "cold")
+        case .contrastTransition:
+            ContrastTransitionView()
+        case .contrastSummary:
+            ContrastSummaryView()
         }
     }
 }

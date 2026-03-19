@@ -33,6 +33,9 @@ final class SessionRecord {
     // Notes
     var notes: String?
 
+    // Contrast therapy grouping
+    var contrastGroupId: UUID?
+
     // Date key for grouping
     var dateKey: String
 

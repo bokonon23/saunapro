@@ -20,7 +20,49 @@ struct HistoryView: View {
                 List {
                     ForEach(groupedByDate, id: \.key) { dateKey, sessions in
                         Section {
-                            ForEach(sessions) { session in
+                            let sequences = ContrastDetector.detectSequences(sessions: sessions)
+                            let sequenceIds = Set(sequences.flatMap { $0.sessions.map(\.id) })
+                            let standalone = sessions.filter { !sequenceIds.contains($0.id) }
+
+                            ForEach(sequences) { sequence in
+                                NavigationLink(value: sequence.sessions.first!) {
+                                    HStack {
+                                        HStack(spacing: 2) {
+                                            Image(systemName: "flame.fill")
+                                                .foregroundStyle(.orange)
+                                            Image(systemName: "snowflake")
+                                                .foregroundStyle(.cyan)
+                                        }
+                                        .font(.caption)
+                                        .frame(width: 30)
+
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Contrast Therapy")
+                                                .font(.subheadline.bold())
+                                            HStack(spacing: 8) {
+                                                Text(timeString(sequence.startTime))
+                                                Text("·")
+                                                Text("\(sequence.rounds) rounds")
+                                                Text("·")
+                                                Text(String(format: "%.0f min", sequence.totalDurationMinutes))
+                                            }
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                        }
+
+                                        Spacer()
+
+                                        if sequence.endedOnCold {
+                                            Image(systemName: "checkmark.seal.fill")
+                                                .font(.caption)
+                                                .foregroundStyle(.green)
+                                        }
+                                    }
+                                    .padding(.vertical, 2)
+                                }
+                            }
+
+                            ForEach(standalone) { session in
                                 NavigationLink(value: session) {
                                     HStack {
                                         Image(systemName: session.type.icon)

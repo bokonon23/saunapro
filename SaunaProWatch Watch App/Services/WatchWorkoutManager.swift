@@ -8,6 +8,12 @@ final class WatchWorkoutManager: NSObject {
         case running
         case coldPlunge
         case summary
+
+        // Contrast therapy flow
+        case contrastSauna
+        case contrastCold
+        case contrastTransition
+        case contrastSummary
     }
 
     // MARK: - Published State
@@ -18,12 +24,21 @@ final class WatchWorkoutManager: NSObject {
     var peakHeartRate: Double = 0
     var averageHeartRate: Double = 0
 
-    // Cold plunge
+    // Cold plunge (existing flow)
     var coldPlungeMarked = false
     var coldPlungeElapsedSeconds: Int = 0
 
     // Completed session
     var completedSession: WatchSessionData?
+
+    // MARK: - Contrast Mode
+
+    var isContrastMode = false
+    var contrastRoundNumber: Int = 0
+    var contrastRounds: [ContrastRound] = []
+    var contrastGroupId: UUID?
+    var contrastPhaseElapsedSeconds: Int = 0
+    var contrastNextPhase: String = ""
 
     // MARK: - Private
 
@@ -39,6 +54,12 @@ final class WatchWorkoutManager: NSObject {
     private var coldPlungeEndDate: Date?
     private var coldPlungeTimer: Timer?
 
+    // Contrast phase tracking
+    private var phaseStartDate: Date?
+    private var phaseHeartRateValues: [Double] = []
+    private var phasePeakHR: Double = 0
+    private var phaseTimer: Timer?
+
     // MARK: - Authorization
 
     func requestAuthorization() async throws {
@@ -51,9 +72,9 @@ final class WatchWorkoutManager: NSObject {
         try await healthStore.requestAuthorization(toShare: typesToWrite, read: typesToRead)
     }
 
-    // MARK: - Sauna Session
+    // MARK: - Shared Workout Setup
 
-    func startSaunaSession() async throws {
+    private func startWorkoutSession() async throws {
         try await requestAuthorization()
 
         let config = HKWorkoutConfiguration()
@@ -79,8 +100,14 @@ final class WatchWorkoutManager: NSObject {
         session.startActivity(with: Date())
         try await builder.beginCollection(at: Date())
 
-        state = .running
         startTimer()
+    }
+
+    // MARK: - Sauna Session (existing flow)
+
+    func startSaunaSession() async throws {
+        try await startWorkoutSession()
+        state = .running
     }
 
     func stopSession() {
@@ -94,7 +121,7 @@ final class WatchWorkoutManager: NSObject {
         state = .summary
     }
 
-    // MARK: - Cold Plunge
+    // MARK: - Cold Plunge (existing flow)
 
     func startColdPlunge() {
         coldPlungeMarked = true
@@ -118,6 +145,128 @@ final class WatchWorkoutManager: NSObject {
         state = .summary
     }
 
+    // MARK: - Contrast Therapy
+
+    func startContrastSession() async throws {
+        try await startWorkoutSession()
+
+        isContrastMode = true
+        contrastGroupId = UUID()
+        contrastRoundNumber = 1
+        contrastRounds = []
+
+        beginContrastSaunaPhase()
+    }
+
+    func beginContrastSaunaPhase() {
+        phaseStartDate = Date()
+        phaseHeartRateValues = []
+        phasePeakHR = 0
+        contrastPhaseElapsedSeconds = 0
+        state = .contrastSauna
+
+        startPhaseTimer()
+    }
+
+    func endContrastSaunaPhase(switchToCold: Bool) {
+        saveCurrentPhaseRound(phase: "sauna")
+        stopPhaseTimer()
+
+        if switchToCold {
+            contrastNextPhase = "cold"
+            state = .contrastTransition
+        } else {
+            finishContrastSession(endedOnCold: false)
+        }
+    }
+
+    func beginContrastColdPhase() {
+        phaseStartDate = Date()
+        phaseHeartRateValues = []
+        phasePeakHR = 0
+        contrastPhaseElapsedSeconds = 0
+        state = .contrastCold
+
+        startPhaseTimer()
+    }
+
+    func endContrastColdPhase(switchToSauna: Bool) {
+        saveCurrentPhaseRound(phase: "coldPlunge")
+        stopPhaseTimer()
+
+        if switchToSauna {
+            contrastRoundNumber += 1
+            contrastNextPhase = "sauna"
+            state = .contrastTransition
+        } else {
+            finishContrastSession(endedOnCold: true)
+        }
+    }
+
+    func contrastTransitionComplete() {
+        if contrastNextPhase == "cold" {
+            beginContrastColdPhase()
+        } else {
+            beginContrastSaunaPhase()
+        }
+    }
+
+    private func finishContrastSession(endedOnCold: Bool) {
+        sessionEndDate = Date()
+        workoutSession?.end()
+
+        timer?.invalidate()
+        timer = nil
+
+        guard let start = sessionStartDate else { return }
+        let end = sessionEndDate ?? Date()
+
+        completedSession = WatchSessionData(
+            sessionType: .sauna,
+            startTime: start,
+            endTime: end,
+            peakHR: peakHeartRate > 0 ? peakHeartRate : nil,
+            averageHR: averageHeartRate > 0 ? averageHeartRate : nil,
+            contrastRounds: contrastRounds,
+            contrastGroupId: contrastGroupId,
+            endedOnCold: endedOnCold
+        )
+
+        state = .contrastSummary
+    }
+
+    private func saveCurrentPhaseRound(phase: String) {
+        guard let start = phaseStartDate else { return }
+        let end = Date()
+        let avgHR: Double? = phaseHeartRateValues.isEmpty ? nil :
+            phaseHeartRateValues.reduce(0, +) / Double(phaseHeartRateValues.count)
+
+        let round = ContrastRound(
+            roundNumber: contrastRoundNumber,
+            phase: phase,
+            startTime: start,
+            endTime: end,
+            durationSeconds: contrastPhaseElapsedSeconds,
+            peakHR: phasePeakHR > 0 ? phasePeakHR : nil,
+            averageHR: avgHR
+        )
+        contrastRounds.append(round)
+    }
+
+    private func startPhaseTimer() {
+        phaseTimer?.invalidate()
+        phaseTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.contrastPhaseElapsedSeconds += 1
+            }
+        }
+    }
+
+    private func stopPhaseTimer() {
+        phaseTimer?.invalidate()
+        phaseTimer = nil
+    }
+
     // MARK: - Reset
 
     func reset() {
@@ -136,6 +285,19 @@ final class WatchWorkoutManager: NSObject {
         heartRateValues = []
         workoutSession = nil
         workoutBuilder = nil
+
+        // Contrast state
+        isContrastMode = false
+        contrastRoundNumber = 0
+        contrastRounds = []
+        contrastGroupId = nil
+        contrastPhaseElapsedSeconds = 0
+        contrastNextPhase = ""
+        phaseStartDate = nil
+        phaseHeartRateValues = []
+        phasePeakHR = 0
+        phaseTimer?.invalidate()
+        phaseTimer = nil
     }
 
     // MARK: - Private Helpers
@@ -174,6 +336,14 @@ final class WatchWorkoutManager: NSObject {
 
         let sum = heartRateValues.reduce(0, +)
         averageHeartRate = sum / Double(heartRateValues.count)
+
+        // Track per-phase HR in contrast mode
+        if isContrastMode {
+            phaseHeartRateValues.append(bpm)
+            if bpm > phasePeakHR {
+                phasePeakHR = bpm
+            }
+        }
     }
 }
 

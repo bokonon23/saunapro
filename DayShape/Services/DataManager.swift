@@ -193,21 +193,44 @@ final class DataManager {
             peakHR: watchData.peakHR
         )
         session.notes = "Recorded on Apple Watch"
-        context.insert(session)
 
-        // If cold plunge was marked, create a separate session
-        if watchData.coldPlungeMarked,
-           let cpStart = watchData.coldPlungeStart,
-           let cpEnd = watchData.coldPlungeEnd {
-            let cpSession = SessionRecord(
-                type: .coldPlunge,
-                source: .watchApp,
-                status: .confirmed,
-                startTime: cpStart,
-                endTime: cpEnd
-            )
-            cpSession.notes = "Cold plunge recorded on Apple Watch"
-            context.insert(cpSession)
+        // Contrast therapy: create one SessionRecord per round with shared groupId
+        if let rounds = watchData.contrastRounds, !rounds.isEmpty {
+            let groupId = watchData.contrastGroupId ?? UUID()
+            session.contrastGroupId = groupId
+            context.insert(session)
+
+            for round in rounds {
+                let roundType: SessionType = round.phase == "coldPlunge" ? .coldPlunge : .sauna
+                let roundSession = SessionRecord(
+                    type: roundType,
+                    source: .watchApp,
+                    status: .confirmed,
+                    startTime: round.startTime,
+                    endTime: round.endTime,
+                    peakHR: round.peakHR
+                )
+                roundSession.contrastGroupId = groupId
+                roundSession.notes = "Contrast R\(round.roundNumber) — \(round.phase) (Apple Watch)"
+                context.insert(roundSession)
+            }
+        } else {
+            context.insert(session)
+
+            // If cold plunge was marked, create a separate session
+            if watchData.coldPlungeMarked,
+               let cpStart = watchData.coldPlungeStart,
+               let cpEnd = watchData.coldPlungeEnd {
+                let cpSession = SessionRecord(
+                    type: .coldPlunge,
+                    source: .watchApp,
+                    status: .confirmed,
+                    startTime: cpStart,
+                    endTime: cpEnd
+                )
+                cpSession.notes = "Cold plunge recorded on Apple Watch"
+                context.insert(cpSession)
+            }
         }
 
         try? context.save()

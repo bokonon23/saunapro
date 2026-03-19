@@ -5,9 +5,9 @@ struct IdleView: View {
     @Environment(WatchWorkoutManager.self) var manager
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             Image(systemName: "flame.fill")
-                .font(.system(size: 44))
+                .font(.system(size: 40))
                 .foregroundStyle(.orange)
 
             Button {
@@ -16,14 +16,34 @@ struct IdleView: View {
                     try? await manager.startSaunaSession()
                 }
             } label: {
-                Text("START\nSAUNA")
+                Text("START SAUNA")
                     .font(.title3.bold())
-                    .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 6)
             }
             .buttonStyle(.borderedProminent)
             .tint(.orange)
+
+            Button {
+                WKInterfaceDevice.current().play(.start)
+                Task {
+                    try? await manager.startContrastSession()
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "flame.fill")
+                        .foregroundStyle(.orange)
+                    Text("CONTRAST")
+                        .bold()
+                    Image(systemName: "snowflake")
+                        .foregroundStyle(.cyan)
+                }
+                .font(.caption)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.gray.opacity(0.3))
         }
     }
 }
