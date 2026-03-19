@@ -30,6 +30,38 @@ struct SessionDetailView: View {
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
+
+                    // Reclassify session type
+                    Menu {
+                        Button {
+                            session.sessionType = SessionType.sauna.rawValue
+                            try? modelContext.save()
+                        } label: {
+                            Label("Sauna", systemImage: "flame.fill")
+                        }
+                        Button {
+                            session.sessionType = SessionType.coldPlunge.rawValue
+                            try? modelContext.save()
+                        } label: {
+                            Label("Cold Plunge", systemImage: "snowflake")
+                        }
+                        Button {
+                            session.sessionType = SessionType.swimming.rawValue
+                            try? modelContext.save()
+                        } label: {
+                            Label("Swimming", systemImage: "figure.pool.swim")
+                        }
+                        Button {
+                            session.sessionType = SessionType.exercise.rawValue
+                            try? modelContext.save()
+                        } label: {
+                            Label("Other", systemImage: "ellipsis.circle")
+                        }
+                    } label: {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .padding(.horizontal)
 

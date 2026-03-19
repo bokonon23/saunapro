@@ -186,7 +186,7 @@ struct SettingsView: View {
                 }
 
                 Section("About") {
-                    Label("SaunaPro v1.0", systemImage: "info.circle")
+                    Label("SaunaPro v\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")", systemImage: "info.circle")
                     Label("Sauna & Cold Exposure Tracking", systemImage: "brain")
                         .font(.caption)
                         .foregroundStyle(.secondary)

@@ -5,12 +5,14 @@ enum SessionType: String, Codable, CaseIterable {
     case sauna
     case coldPlunge
     case exercise
+    case swimming
 
     var displayName: String {
         switch self {
         case .sauna: "Sauna"
         case .coldPlunge: "Cold Exposure"
         case .exercise: "Exercise"
+        case .swimming: "Swimming"
         }
     }
 
@@ -19,6 +21,7 @@ enum SessionType: String, Codable, CaseIterable {
         case .sauna: "flame.fill"
         case .coldPlunge: "snowflake"
         case .exercise: "figure.run"
+        case .swimming: "figure.pool.swim"
         }
     }
 
@@ -27,6 +30,7 @@ enum SessionType: String, Codable, CaseIterable {
         case .sauna: .orange
         case .coldPlunge: .cyan
         case .exercise: .green
+        case .swimming: .blue
         }
     }
 

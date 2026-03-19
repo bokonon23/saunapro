@@ -57,6 +57,21 @@ enum WorkoutTrigger: CaseIterable, Identifiable {
         }
     }
 
+    /// The default session type for workouts of this trigger type.
+    /// Swimming defaults to cold plunge; others use duration-based detection.
+    var defaultSessionType: String? {
+        switch self {
+        case .swimBikeRun: "swimming"
+        case .cooldown: "coldPlunge"
+        default: nil  // Use normal duration-based classification
+        }
+    }
+
+    /// Look up the default session type for a given workout activity type.
+    static func defaultSessionType(for type: HKWorkoutActivityType) -> String? {
+        allCases.first { $0.activityType == type }?.defaultSessionType
+    }
+
     /// Look up the display name for any HKWorkoutActivityType.
     static func displayName(for type: HKWorkoutActivityType) -> String {
         allCases.first { $0.activityType == type }?.label ?? "Workout"

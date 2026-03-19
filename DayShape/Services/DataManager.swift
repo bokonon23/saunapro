@@ -66,12 +66,19 @@ final class DataManager {
                 data = try await healthKit.fetchDayData(for: date)
                 isUsingSimulatorData = false
 
-                // If HealthKit returns no HR data, fall back to sample data
+                // If HealthKit returns no HR data on a real device, show empty state
+                // Only use sample data in the simulator
                 if data.heartRateSamples.isEmpty {
+                    #if targetEnvironment(simulator)
                     let sampleData = SampleDataProvider.generateDay(for: date)
                     self.dayData = sampleData
                     isUsingSimulatorData = true
                     sessions = detector.detectSessions(dayData: sampleData)
+                    #else
+                    self.dayData = data
+                    isUsingSimulatorData = false
+                    sessions = []
+                    #endif
                     isLoading = false
                     return
                 }
@@ -148,9 +155,16 @@ final class DataManager {
                             detected[idx].peakHR = peakHR
                         }
                     } else {
-                        // Create new confirmed sauna session from trigger workout
+                        // Create new confirmed session from trigger workout
+                        let sessionType: SessionType
+                        if let triggerDefault = WorkoutTrigger.defaultSessionType(for: workout.activityType) {
+                            sessionType = SessionType(rawValue: triggerDefault) ?? .sauna
+                        } else {
+                            sessionType = durationMinutes <= 5 ? .coldPlunge : .sauna
+                        }
+
                         let session = SessionRecord(
-                            type: durationMinutes <= 5 ? .coldPlunge : .sauna,
+                            type: sessionType,
                             source: .manual,
                             status: .confirmed,
                             startTime: workout.start,
@@ -166,11 +180,18 @@ final class DataManager {
 
             sessions = detected
         } catch {
-            // Fall back to sample data on any error
+            #if targetEnvironment(simulator)
+            // Fall back to sample data in simulator
             let sampleData = SampleDataProvider.generateDay(for: date)
             self.dayData = sampleData
             isUsingSimulatorData = true
             sessions = detector.detectSessions(dayData: sampleData)
+            #else
+            // On real device, show empty state with error
+            self.dayData = nil
+            isUsingSimulatorData = false
+            sessions = []
+            #endif
             errorMessage = error.localizedDescription
         }
 
@@ -281,8 +302,18 @@ final class DataManager {
                     guard durationMinutes >= 3 else { continue }
 
                     let workoutLabel = WorkoutTrigger.displayName(for: workout.activityType)
+
+                    // Determine session type: use trigger-specific default if available,
+                    // otherwise fall back to duration-based classification
+                    let sessionType: SessionType
+                    if let triggerDefault = WorkoutTrigger.defaultSessionType(for: workout.activityType) {
+                        sessionType = SessionType(rawValue: triggerDefault) ?? .sauna
+                    } else {
+                        sessionType = durationMinutes <= 5 ? .coldPlunge : .sauna
+                    }
+
                     let session = SessionRecord(
-                        type: durationMinutes <= 5 ? .coldPlunge : .sauna,
+                        type: sessionType,
                         source: .manual,
                         status: .confirmed,
                         startTime: workout.start,

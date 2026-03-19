@@ -62,11 +62,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		EFBB74862F645E28004FE1E3 /* test Watch App */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "test Watch App";
-			sourceTree = "<group>";
-		};
 		EFC32F8B2F62003000B13D3E /* DayShape */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = DayShape;
@@ -109,7 +104,6 @@
 			children = (
 				EFC32F8B2F62003000B13D3E /* DayShape */,
 				EFCBA7012F6319BC00F27A5F /* SaunaProWatch Watch App */,
-				EFBB74862F645E28004FE1E3 /* test Watch App */,
 				EFC32F8A2F62003000B13D3E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -159,9 +153,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				EFBB74862F645E28004FE1E3 /* test Watch App */,
 			);
 			name = "test Watch App";
 			packageProductDependencies = (
@@ -585,7 +576,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DayShape/SaunaPro.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = GA8X394Y2J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -624,7 +615,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = DayShape/SaunaPro.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = GA8X394Y2J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -660,7 +651,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = GA8X394Y2J;
 				INFOPLIST_KEY_CFBundleDisplayName = SaunaPro;
 				MARKETING_VERSION = 1.1;
@@ -676,7 +667,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = GA8X394Y2J;
 				INFOPLIST_KEY_CFBundleDisplayName = SaunaPro;
 				MARKETING_VERSION = 1.1;
@@ -696,7 +687,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "SaunaProWatch Watch App/SaunaProWatch.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = GA8X394Y2J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -733,7 +724,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "SaunaProWatch Watch App/SaunaProWatch.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = GA8X394Y2J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

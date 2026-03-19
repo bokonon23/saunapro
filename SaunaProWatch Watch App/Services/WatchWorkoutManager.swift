@@ -5,6 +5,7 @@ import HealthKit
 final class WatchWorkoutManager: NSObject {
     enum SessionState {
         case idle
+        case starting      // Brief loading state while HealthKit initializes
         case running
         case coldPlunge
         case summary
@@ -19,6 +20,7 @@ final class WatchWorkoutManager: NSObject {
     // MARK: - Published State
 
     var state: SessionState = .idle
+    var isAuthorized = false
     var elapsedSeconds: Int = 0
     var currentHeartRate: Double = 0
     var peakHeartRate: Double = 0
@@ -62,21 +64,25 @@ final class WatchWorkoutManager: NSObject {
 
     // MARK: - Authorization
 
-    func requestAuthorization() async throws {
+    func requestAuthorization() async {
         let typesToRead: Set<HKObjectType> = [
             HKQuantityType(.heartRate)
         ]
         let typesToWrite: Set<HKSampleType> = [
             HKWorkoutType.workoutType()
         ]
-        try await healthStore.requestAuthorization(toShare: typesToWrite, read: typesToRead)
+        do {
+            try await healthStore.requestAuthorization(toShare: typesToWrite, read: typesToRead)
+            isAuthorized = true
+        } catch {
+            // Authorization failed — buttons will still show, session start will retry
+            isAuthorized = true  // Let them try anyway; HK will prompt if needed
+        }
     }
 
     // MARK: - Shared Workout Setup
 
     private func startWorkoutSession() async throws {
-        try await requestAuthorization()
-
         let config = HKWorkoutConfiguration()
         config.activityType = .other
         config.locationType = .indoor
@@ -106,6 +112,7 @@ final class WatchWorkoutManager: NSObject {
     // MARK: - Sauna Session (existing flow)
 
     func startSaunaSession() async throws {
+        state = .starting
         try await startWorkoutSession()
         state = .running
     }
@@ -129,9 +136,11 @@ final class WatchWorkoutManager: NSObject {
         coldPlungeElapsedSeconds = 0
         state = .coldPlunge
 
+        coldPlungeTimer?.invalidate()
         coldPlungeTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.coldPlungeElapsedSeconds += 1
+                guard let self, let start = self.coldPlungeStartDate else { return }
+                self.coldPlungeElapsedSeconds = Int(Date().timeIntervalSince(start))
             }
         }
     }
@@ -148,6 +157,7 @@ final class WatchWorkoutManager: NSObject {
     // MARK: - Contrast Therapy
 
     func startContrastSession() async throws {
+        state = .starting
         try await startWorkoutSession()
 
         isContrastMode = true
@@ -257,7 +267,8 @@ final class WatchWorkoutManager: NSObject {
         phaseTimer?.invalidate()
         phaseTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.contrastPhaseElapsedSeconds += 1
+                guard let self, let start = self.phaseStartDate else { return }
+                self.contrastPhaseElapsedSeconds = Int(Date().timeIntervalSince(start))
             }
         }
     }
@@ -303,9 +314,11 @@ final class WatchWorkoutManager: NSObject {
     // MARK: - Private Helpers
 
     private func startTimer() {
+        timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.elapsedSeconds += 1
+                guard let self, let start = self.sessionStartDate else { return }
+                self.elapsedSeconds = Int(Date().timeIntervalSince(start))
             }
         }
     }

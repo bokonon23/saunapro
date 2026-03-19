@@ -10,16 +10,11 @@ struct WelcomeView: View {
 
                 // App icon and title
                 VStack(spacing: 12) {
-                    Image(systemName: "flame.fill")
-                        .font(.system(size: 70))
-                        .foregroundStyle(
-                            .linearGradient(
-                                colors: [.yellow, .orange, .red],
-                                startPoint: .bottom,
-                                endPoint: .top
-                            )
-                        )
-                        .symbolEffect(.pulse, options: .repeating)
+                    Image("AppLogo")
+                        .resizable()
+                        .frame(width: 100, height: 100)
+                        .clipShape(RoundedRectangle(cornerRadius: 22))
+                        .shadow(radius: 4)
 
                     Text("SaunaPro")
                         .font(.largeTitle.bold())

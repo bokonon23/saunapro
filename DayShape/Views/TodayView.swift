@@ -30,6 +30,13 @@ struct DayView: View {
                     if dataManager.isLoading {
                         ProgressView("Loading health data...")
                             .padding(.top, 60)
+                    } else if dataManager.dayData == nil && dataManager.errorMessage != nil {
+                        ContentUnavailableView(
+                            "Unable to Load Data",
+                            systemImage: "exclamationmark.triangle",
+                            description: Text(dataManager.errorMessage ?? "Check HealthKit permissions in Settings.")
+                        )
+                        .padding(.top, 40)
                     } else if let dayData = dataManager.dayData {
                         if dataManager.isUsingSimulatorData {
                             Label("Sample data (Apple Watch Ultra sim)", systemImage: "exclamationmark.triangle")
@@ -49,12 +56,21 @@ struct DayView: View {
                             .padding(.horizontal)
 
                         if dataManager.sessions.isEmpty {
+                            if dayData.heartRateSamples.isEmpty {
+                                ContentUnavailableView(
+                                    "No Heart Rate Data",
+                                    systemImage: "applewatch",
+                                    description: Text("No heart rate data found \(isToday ? "today" : "for this date"). Wear your Apple Watch to record heart rate data, then check back.")
+                                )
+                                .padding(.top, 20)
+                            } else {
                             ContentUnavailableView(
                                 "No Sessions Detected",
                                 systemImage: "flame",
                                 description: Text("No sauna or cold plunge sessions found \(isToday ? "today" : "this day").")
                             )
                             .padding(.top, 20)
+                            }
                         } else {
                             let sequences = ContrastDetector.detectSequences(sessions: dataManager.sessions)
                             let sequenceSessionIds = Set(sequences.flatMap { $0.sessions.map(\.id) })
